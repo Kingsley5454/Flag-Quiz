@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flag Quiz Game — Guess All 50 World Flags</title>
+<meta name="description" content="Can you guess all 50 world flags? Test your geography knowledge in this free flag quiz game. How many flags do you know?">
+<meta name="keywords" content="flag quiz, guess the flag, world flags game, geography quiz, flag game, country flags">
+<meta property="og:title" content="Flag Quiz Game — Guess All 50 World Flags">
+<meta property="og:description" content="Test your geography knowledge! Guess all 50 world flags in this free quiz game.">
+<meta name="robots" content="index, follow">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1604766789977556" crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --card: #1a1e28;
+    --border: #252a38;
+    --accent: #f7c948;
+    --accent2: #e84545;
+    --accent3: #3bafda;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ANIMATED BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(247,201,72,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59,175,218,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 50%, rgba(232,69,69,0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* TICKER TAPE */
+  .ticker-wrap {
+    width: 100%;
+    background: var(--accent);
+    overflow: hidden;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .ticker {
+    display: flex;
+    gap: 0;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+  .ticker span {
+    color: #0a0c10;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 3px;
+    padding: 0 40px;
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 50px 20px 30px;
+  }
+  .logo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .logo-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 8px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .logo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 10vw, 96px);
+    line-height: 0.9;
+    color: var(--text);
+    letter-spacing: 4px;
+  }
+  .logo-title span { color: var(--accent); }
+  .logo-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 20px 36px;
+    position: relative;
+    z-index: 1;
+  }
+  .stat-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 100px;
+  }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .stat-value.green { color: var(--correct); }
+  .stat-value.red { color: var(--wrong); }
+
+  /* MAIN GAME */
+  .game-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* PROGRESS BAR */
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent), var(--accent3));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* FLAG CARD */
+  .flag-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .flag-card-inner {
+    padding: 40px 40px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .question-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  /* THE FLAG */
+  .flag-display {
+    width: 340px;
+    height: 226px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    position: relative;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .flag-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.3s;
+  }
+  .flag-display.hidden .flag-img {
+    filter: blur(20px) brightness(0.5);
+  }
+  .flag-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .flag-number strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* ANSWERS GRID */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .answer-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .answer-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .answer-btn:hover:not(:disabled)::before { opacity: 0.06; }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .answer-btn:disabled { cursor: default; }
+  .answer-btn.correct {
+    border-color: var(--correct);
+    background: rgba(34,197,94,0.12);
+    color: var(--correct);
+  }
+  .answer-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(239,68,68,0.12);
+    color: var(--wrong);
+  }
+  .answer-letter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    width: 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .answer-btn.correct .answer-letter { color: var(--correct); }
+  .answer-btn.wrong .answer-letter { color: var(--wrong); }
+  .answer-text {
+    position: relative;
+    z-index: 1;
+    line-height: 1.2;
+  }
+  .answer-icon {
+    margin-left: auto;
+    font-size: 18px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* RESULT BANNER */
+  .result-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .result-banner.show { display: flex; }
+  .result-banner.correct-banner {
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: var(--correct);
+  }
+  .result-banner.wrong-banner {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: var(--wrong);
+  }
+
+  /* NEXT BUTTON */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 16px;
+    padding: 18px;
+    background: var(--accent);
+    color: #0a0c10;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .next-btn:hover { background: #ffd84a; transform: translateY(-1px); }
+  .next-btn.show { display: block; }
+
+  /* STREAK BADGE */
+  .streak-badge {
+    position: fixed;
+    top: 50px;
+    right: 24px;
+    z-index: 200;
+    background: var(--accent);
+    color: #0a0c10;
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 8px 24px rgba(247,201,72,0.4);
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .streak-badge.show { display: flex; }
+  @keyframes popIn {
+    from { transform: scale(0.5) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  /* GAME OVER SCREEN */
+  .game-over {
+    display: none;
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .game-over.show { display: block; }
+  .game-over-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .game-over-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 20vw, 140px);
+    line-height: 0.85;
+    color: var(--accent);
+    display: block;
+  }
+  .game-over-total {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 8px;
+    margin-bottom: 32px;
+  }
+  .grade-badge {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 4px;
+    padding: 8px 24px;
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+  .restart-btn {
+    display: inline-block;
+    padding: 18px 48px;
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .restart-btn:hover {
+    background: var(--accent);
+    color: #0a0c10;
+  }
+
+  /* DECORATIVE LINES */
+  .dec-line {
+    width: 60px;
+    height: 2px;
+    background: var(--accent);
+    margin: 0 auto 32px;
+  }
+
+  /* CORRECT PULSE ANIMATION */
+  @keyframes correctPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    100% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+  }
+  .flag-card.answered-correct { animation: correctPulse 0.6s ease-out; }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    .answers-grid { grid-template-columns: 1fr; }
+    .flag-display { width: 280px; height: 186px; }
+    .flag-card-inner { padding: 28px 20px 24px; }
+    .stat-chip { min-width: 80px; padding: 8px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TICKER TAPE -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-eyebrow">World Geography Challenge</div>
+    <div class="logo-title">FLAG <span>QUEST</span></div>
+    <div class="logo-sub">50 Flags · Test Your Knowledge</div>
+  </div>
+</header>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-chip">
+    <div class="stat-label">Question</div>
+    <div class="stat-value" id="stat-q">1</div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-label">Score</div>
+    <div class="stat-value green" id="stat-score">0</div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-label">Streak</div>
+    <div class="stat-value" id="stat-streak">0</div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-label">Remaining</div>
+    <div class="stat-value" id="stat-remain">50</div>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-label">Time</div>
+    <div class="stat-value" id="stat-time" style="color:var(--accent3)">0:00</div>
+  </div>
+</div>
+
+<!-- STREAK BADGE -->
+<div class="streak-badge" id="streak-badge">
+  🔥 <span id="streak-text">3 STREAK!</span>
+</div>
+
+<!-- GAME CONTAINER -->
+<div class="game-container">
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <!-- GAME CARD -->
+  <div id="game-card">
+    <div class="flag-card" id="flag-card">
+      <div class="flag-card-inner">
+        <div class="question-label">Which country does this flag belong to?</div>
+        <div class="flag-display" id="flag-display">
+          <img class="flag-img" id="flag-img" src="" alt="Flag" />
+        </div>
+        <div class="flag-number">
+          Question <strong id="q-num">1</strong> of <strong>50</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="answers-grid" id="answers-grid"></div>
+
+    <div class="result-banner" id="result-banner"></div>
+    <button class="next-btn" id="next-btn">Next Flag →</button>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="game-over" id="game-over">
+    <div class="game-over-eyebrow">Game Complete — Final Score</div>
+    <div class="dec-line"></div>
+    <span class="game-over-score" id="final-score">0</span>
+    <div class="game-over-total">out of 50 flags</div>
+    <div class="game-over-total" id="final-time" style="color:var(--accent3);font-size:16px;margin-top:-20px;margin-bottom:20px;"></div>
+    <div class="grade-badge" id="grade-badge"></div>
+    <br>
+    <button class="restart-btn" onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+const FLAGS = [
+  { country: "Japan", emoji: "🇯🇵", url: "https://flagcdn.com/w320/jp.png" },
+  { country: "Brazil", emoji: "🇧🇷", url: "https://flagcdn.com/w320/br.png" },
+  { country: "Germany", emoji: "🇩🇪", url: "https://flagcdn.com/w320/de.png" },
+  { country: "France", emoji: "🇫🇷", url: "https://flagcdn.com/w320/fr.png" },
+  { country: "Canada", emoji: "🇨🇦", url: "https://flagcdn.com/w320/ca.png" },
+  { country: "Australia", emoji: "🇦🇺", url: "https://flagcdn.com/w320/au.png" },
+  { country: "United States", emoji: "🇺🇸", url: "https://flagcdn.com/w320/us.png" },
+  { country: "United Kingdom", emoji: "🇬🇧", url: "https://flagcdn.com/w320/gb.png" },
+  { country: "Italy", emoji: "🇮🇹", url: "https://flagcdn.com/w320/it.png" },
+  { country: "Spain", emoji: "🇪🇸", url: "https://flagcdn.com/w320/es.png" },
+  { country: "Mexico", emoji: "🇲🇽", url: "https://flagcdn.com/w320/mx.png" },
+  { country: "India", emoji: "🇮🇳", url: "https://flagcdn.com/w320/in.png" },
+  { country: "China", emoji: "🇨🇳", url: "https://flagcdn.com/w320/cn.png" },
+  { country: "South Korea", emoji: "🇰🇷", url: "https://flagcdn.com/w320/kr.png" },
+  { country: "Russia", emoji: "🇷🇺", url: "https://flagcdn.com/w320/ru.png" },
+  { country: "Argentina", emoji: "🇦🇷", url: "https://flagcdn.com/w320/ar.png" },
+  { country: "South Africa", emoji: "🇿🇦", url: "https://flagcdn.com/w320/za.png" },
+  { country: "Nigeria", emoji: "🇳🇬", url: "https://flagcdn.com/w320/ng.png" },
+  { country: "Egypt", emoji: "🇪🇬", url: "https://flagcdn.com/w320/eg.png" },
+  { country: "Turkey", emoji: "🇹🇷", url: "https://flagcdn.com/w320/tr.png" },
+  { country: "Saudi Arabia", emoji: "🇸🇦", url: "https://flagcdn.com/w320/sa.png" },
+  { country: "Netherlands", emoji: "🇳🇱", url: "https://flagcdn.com/w320/nl.png" },
+  { country: "Sweden", emoji: "🇸🇪", url: "https://flagcdn.com/w320/se.png" },
+  { country: "Norway", emoji: "🇳🇴", url: "https://flagcdn.com/w320/no.png" },
+  { country: "Switzerland", emoji: "🇨🇭", url: "https://flagcdn.com/w320/ch.png" },
+  { country: "Poland", emoji: "🇵🇱", url: "https://flagcdn.com/w320/pl.png" },
+  { country: "Portugal", emoji: "🇵🇹", url: "https://flagcdn.com/w320/pt.png" },
+  { country: "Greece", emoji: "🇬🇷", url: "https://flagcdn.com/w320/gr.png" },
+  { country: "Ukraine", emoji: "🇺🇦", url: "https://flagcdn.com/w320/ua.png" },
+  { country: "Indonesia", emoji: "🇮🇩", url: "https://flagcdn.com/w320/id.png" },
+  { country: "Pakistan", emoji: "🇵🇰", url: "https://flagcdn.com/w320/pk.png" },
+  { country: "Bangladesh", emoji: "🇧🇩", url: "https://flagcdn.com/w320/bd.png" },
+  { country: "Philippines", emoji: "🇵🇭", url: "https://flagcdn.com/w320/ph.png" },
+  { country: "Vietnam", emoji: "🇻🇳", url: "https://flagcdn.com/w320/vn.png" },
+  { country: "Thailand", emoji: "🇹🇭", url: "https://flagcdn.com/w320/th.png" },
+  { country: "Iran", emoji: "🇮🇷", url: "https://flagcdn.com/w320/ir.png" },
+  { country: "Kenya", emoji: "🇰🇪", url: "https://flagcdn.com/w320/ke.png" },
+  { country: "Colombia", emoji: "🇨🇴", url: "https://flagcdn.com/w320/co.png" },
+  { country: "Chile", emoji: "🇨🇱", url: "https://flagcdn.com/w320/cl.png" },
+  { country: "Peru", emoji: "🇵🇪", url: "https://flagcdn.com/w320/pe.png" },
+  { country: "New Zealand", emoji: "🇳🇿", url: "https://flagcdn.com/w320/nz.png" },
+  { country: "Denmark", emoji: "🇩🇰", url: "https://flagcdn.com/w320/dk.png" },
+  { country: "Finland", emoji: "🇫🇮", url: "https://flagcdn.com/w320/fi.png" },
+  { country: "Belgium", emoji: "🇧🇪", url: "https://flagcdn.com/w320/be.png" },
+  { country: "Austria", emoji: "🇦🇹", url: "https://flagcdn.com/w320/at.png" },
+  { country: "Israel", emoji: "🇮🇱", url: "https://flagcdn.com/w320/il.png" },
+  { country: "Morocco", emoji: "🇲🇦", url: "https://flagcdn.com/w320/ma.png" },
+  { country: "Ethiopia", emoji: "🇪🇹", url: "https://flagcdn.com/w320/et.png" },
+  { country: "Ghana", emoji: "🇬🇭", url: "https://flagcdn.com/w320/gh.png" },
+  { country: "Jamaica", emoji: "🇯🇲", url: "https://flagcdn.com/w320/jm.png" },
+];
+
+const LETTERS = ['A', 'B', 'C', 'D'];
+let shuffledFlags = [];
+let currentIndex = 0;
+let score = 0;
+let streak = 0;
+let answered = false;
+let timerInterval = null;
+let timerSeconds = 0;
+let timerStarted = false;
+
+function startTimer() {
+  if (timerStarted) return;
+  timerStarted = true;
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('stat-time').textContent = m + ':' + s.toString().padStart(2,'0');
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// Build ticker
+const tickerEl = document.getElementById('ticker');
+const tickerContent = FLAGS.map(f => `<span>${f.emoji} ${f.country.toUpperCase()}</span>`).join('');
+tickerEl.innerHTML = tickerContent + tickerContent; // duplicate for infinite loop
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getWrongOptions(correct, count) {
+  const pool = FLAGS.filter(f => f.country !== correct.country);
+  return shuffle(pool).slice(0, count);
+}
+
+function loadQuestion() {
+  answered = false;
+  const current = shuffledFlags[currentIndex];
+
+  // Update stats
+  document.getElementById('stat-q').textContent = currentIndex + 1;
+  document.getElementById('stat-remain').textContent = 50 - currentIndex;
+  document.getElementById('q-num').textContent = currentIndex + 1;
+
+  // Progress
+  const pct = (currentIndex / 50) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Flag image
+  const img = document.getElementById('flag-img');
+  const display = document.getElementById('flag-display');
+  img.src = current.url;
+  display.classList.remove('hidden');
+
+  // Build answers
+  const wrongs = getWrongOptions(current, 3);
+  const options = shuffle([current, ...wrongs]);
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `
+      <span class="answer-letter">${LETTERS[i]}</span>
+      <span class="answer-text">${opt.country}</span>
+    `;
+    btn.addEventListener('click', () => handleAnswer(opt.country, current.country, btn, options));
+    grid.appendChild(btn);
+  });
+
+  // Hide result and next
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner';
+  banner.innerHTML = '';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('flag-card').classList.remove('answered-correct');
+}
+
+function handleAnswer(chosen, correct, btn, options) {
+  if (answered) return;
+  startTimer();
+  answered = true;
+
+  const isCorrect = chosen === correct;
+  const grid = document.getElementById('answers-grid');
+  const allBtns = grid.querySelectorAll('.answer-btn');
+  const banner = document.getElementById('result-banner');
+
+  allBtns.forEach((b, i) => {
+    b.disabled = true;
+    const txt = b.querySelector('.answer-text').textContent;
+    if (txt === correct) {
+      b.classList.add('correct');
+      b.innerHTML += `<span class="answer-icon">✓</span>`;
+    } else if (txt === chosen && !isCorrect) {
+      b.classList.add('wrong');
+      b.innerHTML += `<span class="answer-icon">✗</span>`;
+    }
+  });
+
+  if (isCorrect) {
+    score++;
+    streak++;
+    document.getElementById('stat-score').textContent = score;
+    document.getElementById('stat-streak').textContent = streak;
+
+    banner.className = 'result-banner correct-banner show';
+    banner.innerHTML = `✓ &nbsp; Correct! That's <strong>${correct}</strong>`;
+    document.getElementById('flag-card').classList.add('answered-correct');
+
+    if (streak >= 3) {
+      const badge = document.getElementById('streak-badge');
+      document.getElementById('streak-text').textContent = `${streak} STREAK!`;
+      badge.classList.add('show');
+      setTimeout(() => badge.classList.remove('show'), 2000);
+    }
+  } else {
+    streak = 0;
+    document.getElementById('stat-streak').textContent = 0;
+    banner.className = 'result-banner wrong-banner show';
+    banner.innerHTML = `✗ &nbsp; The answer was <strong>${correct}</strong>`;
+  }
+
+  document.getElementById('next-btn').classList.add('show');
+}
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  currentIndex++;
+  if (currentIndex >= 50) {
+    showGameOver();
+  } else {
+    loadQuestion();
+  }
+});
+
+function showGameOver() {
+  stopTimer();
+  document.getElementById('game-card').style.display = 'none';
+  const go = document.getElementById('game-over');
+  go.classList.add('show');
+  document.getElementById('final-score').textContent = score;
+
+  const pct = (score / 50) * 100;
+  let grade, bg, color;
+  if (pct >= 90) { grade = '🏆 WORLD EXPERT'; bg = 'rgba(247,201,72,0.15)'; color = '#f7c948'; }
+  else if (pct >= 70) { grade = '🌍 GLOBE TROTTER'; bg = 'rgba(59,175,218,0.15)'; color = '#3bafda'; }
+  else if (pct >= 50) { grade = '✈️ TRAVELER'; bg = 'rgba(34,197,94,0.12)'; color = '#22c55e'; }
+  else if (pct >= 30) { grade = '🗺️ EXPLORER'; bg = 'rgba(251,146,60,0.12)'; color = '#fb923c'; }
+  else { grade = '📚 KEEP STUDYING'; bg = 'rgba(239,68,68,0.1)'; color = '#ef4444'; }
+
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = grade;
+  badge.style.background = bg;
+  badge.style.color = color;
+  badge.style.border = `1px solid ${color}40`;
+
+  document.getElementById('progress-fill').style.width = '100%';
+  const fm = Math.floor(timerSeconds / 60);
+  const fs = timerSeconds % 60;
+  document.getElementById('final-time').textContent = '⏱ Total time: ' + fm + ':' + fs.toString().padStart(2,'0');
+}
+
+function restartGame() {
+  score = 0; streak = 0; currentIndex = 0; answered = false; timerSeconds = 0; timerStarted = false; stopTimer(); document.getElementById('stat-time').textContent = '0:00';
+  document.getElementById('stat-score').textContent = 0;
+  document.getElementById('stat-streak').textContent = 0;
+  shuffledFlags = shuffle(FLAGS);
+  document.getElementById('game-over').classList.remove('show');
+  document.getElementById('game-card').style.display = 'block';
+  loadQuestion();
+}
+
+// Start!
+shuffledFlags = shuffle(FLAGS);
+loadQuestion();
+</script>
+</body>
+</html>
